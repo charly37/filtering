@@ -2,7 +2,7 @@ import csv
 import re
 
 
-print("Starting")
+print("Starting - The file to read need to be in the same folder and called waround.csv")
 
 def filtering(aPostContent):
     #https://stackoverflow.com/questions/3868753/find-phone-numbers-in-python-script
