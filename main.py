@@ -20,11 +20,15 @@ def filtering(aPost):
     aPhoneNumberMatch=aPhoneNumberRegex.search(aPost["content"])
     if(aPhoneNumberMatch):
         print("This post ID", aPost["post_uuid"], "need to be filter due to phone number:", aPhoneNumberMatch.group(), "with post content:", aPost["content"])
+        if (args.filter):
+            aPost["content"]=re.sub(r"\d{3}\d{3}\d{4}","**********",aPost["content"])
     #https://stackoverflow.com/questions/17681670/extract-email-sub-strings-from-large-document
     aEmailAdressRegex = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
     aEmailMatch=aEmailAdressRegex.search(aPost["content"])
     if(aEmailMatch):
         print("This post ID", aPost["post_uuid"], "need to be filter due to email:", aEmailMatch.group(), "with post content:", aPost["content"])
+        if (args.filter):
+            aPost["content"]=re.sub(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+","**********",aPost["content"])
     return aPost
     
 
@@ -39,7 +43,7 @@ with open("waround.csv", encoding="utf8") as f:
     aNbPhoneNumberPost=0
 
     #Also open a file to write data
-    with open("output.csv","w", , newline='') as filteredFile:
+    with open("output.csv","w", encoding="utf8",newline='') as filteredFile:
         fieldnames = ['Anonymous Link', 'ww_uuid','post_uuid','content','Word Count']
         writer = csv.DictWriter(filteredFile, fieldnames=fieldnames)
         writer.writeheader()
