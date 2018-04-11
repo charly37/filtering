@@ -25,6 +25,7 @@ def filtering(aPost):
     aEmailMatch=aEmailAdressRegex.search(aPost["content"])
     if(aEmailMatch):
         print("This post ID", aPost["post_uuid"], "need to be filter due to email:", aEmailMatch.group(), "with post content:", aPost["content"])
+    return aPost
     
 
 
@@ -38,11 +39,15 @@ with open("waround.csv", encoding="utf8") as f:
     aNbPhoneNumberPost=0
 
     #Also open a file to write data
-    with open("testfile.txt","w") as filteredFile:
+    with open("output.csv","w", , newline='') as filteredFile:
+        fieldnames = ['Anonymous Link', 'ww_uuid','post_uuid','content','Word Count']
+        writer = csv.DictWriter(filteredFile, fieldnames=fieldnames)
+        writer.writeheader()
 
         for aOneEntry in reader:
             #print("Working on: ", aOneEntry)
             #print("Content to clean: ", aOneEntry["content"])
             filtering(aOneEntry)
+            writer.writerow(aOneEntry)
 
 print("Ending in ", (time.time() - start_time),  " ms")
