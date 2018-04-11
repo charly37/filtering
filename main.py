@@ -11,6 +11,7 @@ def filtering(aPostContent):
     if(aPhoneNumberMatch):
         print("This post need to be filter due to phone number: ", aPhoneNumberMatch.group())
         return 1
+    #https://stackoverflow.com/questions/17681670/extract-email-sub-strings-from-large-document
     reg2 = re.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
     aEmailMatch=reg2.search(aPostContent)
     if(aEmailMatch):
