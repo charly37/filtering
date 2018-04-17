@@ -47,7 +47,7 @@ def filtering(aPost,iMatchInfo):
     aPhoneNumberRegex = re.compile(r"\d{3}\d{3}\d{4}")
     aPhoneNumberMatch=aPhoneNumberRegex.search(aPost["content"])
     if(aPhoneNumberMatch):
-        logger.info("This post ID " + aPost["post_uuid"] +  " need to be filter due to phone number: " + str(aPhoneNumberMatch.group()))
+        #logger.info("This post ID " + aPost["post_uuid"] +  " need to be filter due to phone number: " + str(aPhoneNumberMatch.group()))
         #print("This post ID", aPost["post_uuid"], "need to be filter due to phone number:", aPhoneNumberMatch.group(), "with post content:", aPost["content"])
         iMatchInfo[0]=iMatchInfo[0]+1
         if (args.filter):
@@ -56,11 +56,17 @@ def filtering(aPost,iMatchInfo):
     aEmailAdressRegex = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
     aEmailMatch=aEmailAdressRegex.search(aPost["content"])
     if(aEmailMatch):
-        logger.info("This post ID " + str(aPost["post_uuid"]) + " need to be filter due to email: " + str(aEmailMatch.group()))
+        #logger.info("This post ID " + str(aPost["post_uuid"]) + " need to be filter due to email: " + str(aEmailMatch.group()))
         iMatchInfo[1]=iMatchInfo[1]+1
         if (args.filter):
             aPost["content"]=re.sub(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)",r"___WARNINGEMAILADD:\1___",aPost["content"])
     return aPost
+
+def tagging(aPost):
+    aRsvpRegex = re.compile(r"rsvp")
+    aRsvpMatch=aRsvpRegex.search(aPost["content"],re.IGNORECASE)
+    if(aRsvpMatch):
+        logger.info("This post ID " + aPost["post_uuid"] +  " may be a RESA because of matching keyword: " + str(aRsvpMatch.group())+ " with full post content: " + str(aPost["content"]))
 
 def filterFile(aFilename):
     with open(aFilename, encoding="utf8") as f:
@@ -82,6 +88,7 @@ def filterFile(aFilename):
                 #print("Content to clean: ", aOneEntry["content"])
                 filtering(aOneEntry,aMatchInfo)
                 writer.writerow(aOneEntry)
+                tagging(aOneEntry)
         logger.info("We filter " + str(aMatchInfo[0]) + " phone numbers and " + str(aMatchInfo[1]) + " emails.")
 
 logger.info("Ending in " + str((time.time() - start_time)) + " ms")
