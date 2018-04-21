@@ -30,6 +30,7 @@ start_time = time.time()
 
 parser = argparse.ArgumentParser(description='Look for some email address or phone number in csv file.')
 parser.add_argument('--filter', action='store_true')
+parser.add_argument('--tag', action='store_true')
 
 # https://stackoverflow.com/questions/15753701/argparse-option-for-passing-a-list-as-option
 # This is the correct way to handle accepting multiple arguments.
@@ -44,22 +45,24 @@ args = parser.parse_args()
 
 def filtering(aPost,iMatchInfo):
     #https://stackoverflow.com/questions/3868753/find-phone-numbers-in-python-script
-    aPhoneNumberRegex = re.compile(r"\d{3}\d{3}\d{4}")
+    aPhoneRegexAsString=r"(\d{3}[-\.\s]\d{3}[-\.\s]\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]\d{4}|\d{3}[-\.\s]\d{4})"
+    aPhoneNumberRegex = re.compile(aPhoneRegexAsString)
     aPhoneNumberMatch=aPhoneNumberRegex.search(aPost["content"])
     if(aPhoneNumberMatch):
         #logger.info("This post ID " + aPost["post_uuid"] +  " need to be filter due to phone number: " + str(aPhoneNumberMatch.group()))
         #print("This post ID", aPost["post_uuid"], "need to be filter due to phone number:", aPhoneNumberMatch.group(), "with post content:", aPost["content"])
         iMatchInfo[0]=iMatchInfo[0]+1
         if (args.filter):
-            aPost["content"]=re.sub(r"(\d{3}\d{3}\d{4})",r'___WARNINGPHONE___',aPost["content"])
+            aPost["content"]=re.sub(aPhoneRegexAsString,'___WARNINGPHONE___',aPost["content"])
     #https://stackoverflow.com/questions/17681670/extract-email-sub-strings-from-large-document
-    aEmailAdressRegex = re.compile(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
+    aEmailRegexAsString=r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
+    aEmailAdressRegex = re.compile(aEmailRegexAsString)
     aEmailMatch=aEmailAdressRegex.search(aPost["content"])
     if(aEmailMatch):
         #logger.info("This post ID " + str(aPost["post_uuid"]) + " need to be filter due to email: " + str(aEmailMatch.group()))
         iMatchInfo[1]=iMatchInfo[1]+1
         if (args.filter):
-            aPost["content"]=re.sub(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)",r"___WARNINGEMAILADD___",aPost["content"])
+            aPost["content"]=re.sub(aEmailRegexAsString,"___WARNINGEMAILADD___",aPost["content"])
     return aPost
 
 def tagging(aPost):
@@ -114,8 +117,9 @@ def filterFile(aFilename):
                 #print("Working on: ", aOneEntry)
                 #print("Content to clean: ", aOneEntry["content"])
                 filtering(aOneEntry,aMatchInfo)
-                aTags = tagging(aOneEntry)
-                aOneEntry["TAGS"]= '-'.join(aTags)
+                if (args.tag):
+                    aTags = tagging(aOneEntry)
+                    aOneEntry["TAGS"]= '-'.join(aTags)
                 writer.writerow(aOneEntry)
                 
         logger.info("We filter " + str(aMatchInfo[0]) + " phone numbers and " + str(aMatchInfo[1]) + " emails.")
