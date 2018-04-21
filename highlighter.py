@@ -46,7 +46,7 @@ parser.add_argument('--termToHighlightFilePath', help='File with term to hightli
 
 args = parser.parse_args()
 
-def highlight(aPost,iTermToHighlight, iTermToHighlightRegex):
+def highlight(aPost, iTermToHighlightRegex):
     aTags=[]
     aHighlightMatch=iTermToHighlightRegex.search(aPost["content"])
     if(aHighlightMatch):
@@ -81,7 +81,7 @@ def filterFile(aFilename):
             for aOneEntry in reader:
                 #print("Working on: ", aOneEntry)
                 #print("Content to clean: ", aOneEntry["content"])
-                aTags = highlight(aOneEntry,aTermToHighlight,aTermToHighlightAsRegex)
+                aTags = highlight(aOneEntry,aTermToHighlightAsRegex)
                 aOneEntry["TAGS"]= '-'.join(aTags)
                 writer.writerow(aOneEntry)
                 
