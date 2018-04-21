@@ -45,6 +45,7 @@ args = parser.parse_args()
 
 def filtering(aPost,iMatchInfo):
     #https://stackoverflow.com/questions/3868753/find-phone-numbers-in-python-script
+    # or maybe https://stackoverflow.com/questions/123559/a-comprehensive-regex-for-phone-number-validation
     aPhoneRegexAsString=r"(\d{3}[-\.\s]\d{3}[-\.\s]\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]\d{4}|\d{3}[-\.\s]\d{4})"
     aPhoneNumberRegex = re.compile(aPhoneRegexAsString)
     aPhoneNumberMatch=aPhoneNumberRegex.search(aPost["content"])
