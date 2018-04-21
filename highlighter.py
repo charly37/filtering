@@ -46,14 +46,12 @@ parser.add_argument('--termToHighlightFilePath', help='File with term to hightli
 
 args = parser.parse_args()
 
-def highlight(aPost,iTermToHighlight, iTermToHighlightRegexString):
+def highlight(aPost,iTermToHighlight, iTermToHighlightRegex):
     aTags=[]
-    for aOneTermToHighlight in iTermToHighlight:
-        #aHighlightRegex = re.compile(aOneTermToHighlight)
-        aHighlightMatch=re.search(aOneTermToHighlight,aPost["content"])
-        if(aHighlightMatch):
-            logger.debug("This post ID " + aPost["post_uuid"] +  " was highlighted with : " + str(aHighlightMatch.group()))
-            aTags.append(aOneTermToHighlight)
+    aHighlightMatch=iTermToHighlightRegex.search(aPost["content"])
+    if(aHighlightMatch):
+        logger.debug("This post ID " + aPost["post_uuid"] +  " was highlighted with : " + str(aHighlightMatch.group()))
+        aTags.append(aHighlightMatch.group())
     return aTags
 
 def filterFile(aFilename):
@@ -66,7 +64,9 @@ def filterFile(aFilename):
         aTermToHighlightAsRegexString='|'.join(aTermToHighlight)
 
     logger.info("aTermToHighlight: " + str(aTermToHighlight))
+    aTermToHighlightAsRegex = re.compile(aTermToHighlightAsRegexString)
     logger.info("aTermToHighlightAsRegexString: " + str(aTermToHighlightAsRegexString))
+    logger.info("aTermToHighlightAsRegex: " + str(aTermToHighlightAsRegex))
 
     with open(aFilename, encoding="utf8") as f:
         #CSV header: Anonymous Link,ww_uuid,post_uuid,content,Word Count
@@ -81,7 +81,7 @@ def filterFile(aFilename):
             for aOneEntry in reader:
                 #print("Working on: ", aOneEntry)
                 #print("Content to clean: ", aOneEntry["content"])
-                aTags = highlight(aOneEntry,aTermToHighlight,aTermToHighlightAsRegexString)
+                aTags = highlight(aOneEntry,aTermToHighlight,aTermToHighlightAsRegex)
                 aOneEntry["TAGS"]= '-'.join(aTags)
                 writer.writerow(aOneEntry)
                 
