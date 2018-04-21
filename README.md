@@ -1,5 +1,5 @@
-Quick python 3.6 code to filter CSV file and remove email and phone number
+Bunch of py36 scripts to process datasets
 
-```
-python main.py -h
-```
+main.py to remove phone and email and put some simple tags
+
+highliter.py to add more tags
