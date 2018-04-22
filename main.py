@@ -7,7 +7,6 @@ import csv
 import re
 import argparse
 import time
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -103,8 +102,6 @@ def filterFile(aFilename):
     with open(aFilename, encoding="utf8") as f:
         #CSV header: Anonymous Link,ww_uuid,post_uuid,content,Word Count
         reader = csv.DictReader(f)
-        aNbEmailPost=0
-        aNbPhoneNumberPost=0
         #number of phone and email
         aMatchInfo=[0,0]
 
@@ -125,16 +122,16 @@ def filterFile(aFilename):
                 
         logger.info("We filter " + str(aMatchInfo[0]) + " phone numbers and " + str(aMatchInfo[1]) + " emails.")
 
-logger.info("Ending in " + str((time.time() - start_time)) + " ms")
 
-#dump some options
-if (args.filter):
-    logger.info("Warning i will filter")
-logger.info("Going to work on files:" + str(args.filelist))
+if __name__== "__main__":
+    #dump some options
+    if (args.filter):
+        logger.info("Warning i will filter")
+    logger.info("Going to work on files:" + str(args.filelist))
 
-for aOneFile in args.filelist:
-    logger.info("Current file: " + str(aOneFile))
-    filterFile(aOneFile)
-
+    for aOneFile in args.filelist:
+        logger.info("Current file: " + str(aOneFile))
+        filterFile(aOneFile)
+    logger.info("Ending in " + str((time.time() - start_time)) + " ms")
 
 

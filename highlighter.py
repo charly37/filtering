@@ -8,7 +8,6 @@ import re
 import argparse
 import time
 import datetime
-
 import logging
 
 #https://stackoverflow.com/questions/1557571/how-do-i-get-time-of-a-python-programs-execution
@@ -47,6 +46,11 @@ parser.add_argument('--termToHighlightFilePath', help='File with term to hightli
 args = parser.parse_args()
 
 def highlight(aPost, iTermToHighlightRegex):
+    """Extract some specific keyword from a post content (text)
+    #  @param aPost The post object (dict).
+    #  @param iTermToHighlightRegex The keyword regex to use (regex).
+    #  @return Returns list of tags matching the post
+    """
     aTags=[]
     aHighlightMatch=iTermToHighlightRegex.search(aPost["content"])
     if(aHighlightMatch):
@@ -55,6 +59,9 @@ def highlight(aPost, iTermToHighlightRegex):
     return aTags
 
 def filterFile(aFilename):
+    """Process all the post in a text file to extract their keyword
+    #  @param aFilename The filename path (string).
+    """
     aTermToHighlight=[]
     aTermToHighlightAsRegexString=""
 
@@ -86,11 +93,9 @@ def filterFile(aFilename):
                 writer.writerow(aOneEntry)
                 
 
+if __name__== "__main__":
+    for aOneFile in args.FilePathListToProcess:
+        logger.info("Current file: " + str(aOneFile))
+        filterFile(aOneFile)
 
-# MAIN
-
-for aOneFile in args.FilePathListToProcess:
-    logger.info("Current file: " + str(aOneFile))
-    filterFile(aOneFile)
-
-logger.info("Ending in " + str((time.time() - start_time)) + " ms")
+    logger.info("Ending in " + str((time.time() - start_time)) + " ms")
