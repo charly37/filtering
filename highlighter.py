@@ -44,6 +44,18 @@ class MyTest(unittest.TestCase):
         #We should not detect bbb because it is included in another word
         self.assertEqual(highlight(aFakePost, aFakePatternRegex), ["aaa"])
 
+    def test_highlight_5(self):
+        aFakePost={"post_uuid":"1","content":"Up is opinion message manners correct hearing husband my. Disposing commanded dashwoods cordially depending at at. Its strangers who you certainty earnestly resources suffering she. Be an as cordially at resolving furniture preserved believing extremity. Easy mr pain felt in. Too northward affection additions nay. He no an nature ye talent houses wisdom vanity denied."}
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
+        self.assertEqual(highlight(aFakePost, aFakePatternRegex), [])
+
+    def test_highlight_6(self):
+        aFakePost={"post_uuid":"1","content":"Up is opinion message manners correct hearing husband my. Disposing commanded dashwoods cordially depending at at. Its strangers who you certainty earnestly resources suffering she. Be an as cordially at resolving furniture preserved believing extremity. Easy mr pain felt in. Too northward affection additions nay. He no an nature ye talent houses wisdom vanity denied."}
+        aFakePattern=["aaa","bbb","ccc ddd"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
+        self.assertEqual(highlight(aFakePost, aFakePatternRegex), [])
+
 FILE_FORMAT="utf-8-sig"
 #wafaa use utf-8 and jenny utf-8-sig
 
@@ -91,7 +103,7 @@ def highlight(aPost, iTermToHighlightRegex):
     aTags=[]
     aHighlightMatch=iTermToHighlightRegex.findall(aPost["content"])
     if(aHighlightMatch):
-        logger.info("This post ID " + aPost["post_uuid"] +  " was highlighted with : " + str(aHighlightMatch))
+        logger.info("This post ID " + str(aPost) +  " was highlighted with : " + str(aHighlightMatch))
         aTags = aHighlightMatch
     return aTags
 
