@@ -16,7 +16,7 @@ class MyTest(unittest.TestCase):
 
     def test_createRegexStr(self):
         aFakeListWordMatch=["aaa","bbb","ccc"]
-        self.assertEqual(createRegexStr(aFakeListWordMatch), "aaa|bbb|ccc")
+        self.assertEqual(createRegexStr(aFakeListWordMatch), r"\baaa\b|\bbbb\b|\bccc\b")
 
     def test_highlight_1(self):
         aFakePost1={"post_uuid":"1","content":"abc"}
@@ -96,7 +96,8 @@ def highlight(aPost, iTermToHighlightRegex):
     return aTags
 
 def createRegexStr(aListWords):
-    aTermToHighlightAsRegexString='|'.join(aListWords )
+    aListWordsUpdated = [r"\b" + aOneOriginalWord + r"\b" for aOneOriginalWord in aListWords]
+    aTermToHighlightAsRegexString='|'.join(aListWordsUpdated )
     return aTermToHighlightAsRegexString
 
 def filterFile(aFilename):
