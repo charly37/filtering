@@ -10,6 +10,32 @@ import time
 import datetime
 import logging
 
+import unittest
+
+class MyTest(unittest.TestCase):
+
+    def test_highlight_1(self):
+        aFakePost1={"post_uuid":"1","content":"abc"}
+        aFakePattern="aaa|bbb"
+        aFakePatternRegex = re.compile(aFakePattern)
+        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), [])
+
+    def test_highlight_2(self):
+        aFakePost1={"post_uuid":"1","content":"test aaa test"}
+        aFakePattern="aaa|bbb"
+        aFakePatternRegex = re.compile(aFakePattern)
+        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa"])
+
+    def test_highlight_3(self):
+        #To ensure that if several tag match we detect them all and not only the first one
+        aFakePost1={"post_uuid":"1","content":"test aaa test bbb test"}
+        aFakePattern="aaa|bbb"
+        aFakePatternRegex = re.compile(aFakePattern)
+        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa","bbb"])
+
+FILE_FORMAT="utf-8-sig"
+#wafaa use utf-8 and jenny utf-8-sig
+
 #https://stackoverflow.com/questions/1557571/how-do-i-get-time-of-a-python-programs-execution
 start_time = time.time()
 
@@ -40,7 +66,7 @@ parser = argparse.ArgumentParser(description='Look for some keyword in csv file 
 # '?' == 0 or 1.
 # An int is an explicit number of arguments to accept.
 parser.add_argument('--FilePathListToProcess', nargs='+')
-
+parser.add_argument('--utest', action='store_true')
 parser.add_argument('--termToHighlightFilePath', help='File with term to hightlight. One term by line')
 
 args = parser.parse_args()
@@ -54,7 +80,7 @@ def highlight(aPost, iTermToHighlightRegex):
     aTags=[]
     aHighlightMatch=iTermToHighlightRegex.search(aPost["content"])
     if(aHighlightMatch):
-        logger.debug("This post ID " + aPost["post_uuid"] +  " was highlighted with : " + str(aHighlightMatch.group()))
+        logger.info("This post ID " + aPost["post_uuid"] +  " was highlighted with : " + str(aHighlightMatch.group()))
         aTags.append(aHighlightMatch.group())
     return aTags
 
@@ -65,7 +91,7 @@ def filterFile(aFilename):
     aTermToHighlight=[]
     aTermToHighlightAsRegexString=""
 
-    with open(args.termToHighlightFilePath, encoding="utf8") as aTermToHighlightRaw:
+    with open(args.termToHighlightFilePath, encoding=FILE_FORMAT) as aTermToHighlightRaw:
         for aOneLine in aTermToHighlightRaw:
             aTermToHighlight.append(aOneLine.strip())
         aTermToHighlightAsRegexString='|'.join(aTermToHighlight)
@@ -75,12 +101,12 @@ def filterFile(aFilename):
     logger.info("aTermToHighlightAsRegexString: " + str(aTermToHighlightAsRegexString))
     logger.info("aTermToHighlightAsRegex: " + str(aTermToHighlightAsRegex))
 
-    with open(aFilename, encoding="utf8") as f:
+    with open(aFilename, encoding=FILE_FORMAT) as f:
         #CSV header: Anonymous Link,ww_uuid,post_uuid,content,Word Count
         reader = csv.DictReader(f)
 
         #Also open a file to write data
-        with open(aFilename + "_output"+aCurrentDateTimeString+".csv","w", encoding="utf8",newline='') as filteredFile:
+        with open(aFilename + "_output"+aCurrentDateTimeString+".csv","w", encoding=FILE_FORMAT,newline='') as filteredFile:
             fieldnames = reader.fieldnames + ["TAGS"]
             writer = csv.DictWriter(filteredFile, fieldnames=fieldnames)
             writer.writeheader()
@@ -94,6 +120,13 @@ def filterFile(aFilename):
                 
 
 if __name__== "__main__":
+    if (args.utest):
+        logger.info("Unit test")
+        runner = unittest.TextTestRunner()
+        itersuite = unittest.TestLoader().loadTestsFromTestCase(MyTest)
+        runner.run(itersuite)
+        quit()
+
     for aOneFile in args.FilePathListToProcess:
         logger.info("Current file: " + str(aOneFile))
         filterFile(aOneFile)
