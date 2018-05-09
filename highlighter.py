@@ -14,29 +14,33 @@ import unittest
 
 class MyTest(unittest.TestCase):
 
+    def test_createRegexStr(self):
+        aFakeListWordMatch=["aaa","bbb","ccc"]
+        self.assertEqual(createRegexStr(aFakeListWordMatch), "aaa|bbb|ccc")
+
     def test_highlight_1(self):
         aFakePost1={"post_uuid":"1","content":"abc"}
-        aFakePattern="aaa|bbb"
-        aFakePatternRegex = re.compile(aFakePattern)
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
         self.assertEqual(highlight(aFakePost1, aFakePatternRegex), [])
 
     def test_highlight_2(self):
         aFakePost1={"post_uuid":"1","content":"test aaa test"}
-        aFakePattern="aaa|bbb"
-        aFakePatternRegex = re.compile(aFakePattern)
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
         self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa"])
 
     def test_highlight_3(self):
         #To ensure that if several tag match we detect them all and not only the first one
         aFakePost1={"post_uuid":"1","content":"test aaa test bbb test"}
-        aFakePattern="aaa|bbb"
-        aFakePatternRegex = re.compile(aFakePattern)
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
         self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa","bbb"])
 
     def test_highlight_4(self):
         aFakePost={"post_uuid":"1","content":"test aaa test tesbbbt test"}
-        aFakePattern="aaa|bbb"
-        aFakePatternRegex = re.compile(aFakePattern)
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
         #We should not detect bbb because it is included in another word
         self.assertEqual(highlight(aFakePost, aFakePatternRegex), ["aaa"])
 
@@ -91,6 +95,10 @@ def highlight(aPost, iTermToHighlightRegex):
         aTags = aHighlightMatch
     return aTags
 
+def createRegexStr(aListWords):
+    aTermToHighlightAsRegexString='|'.join(aListWords )
+    return aTermToHighlightAsRegexString
+
 def filterFile(aFilename):
     """Process all the post in a text file to extract their keyword
     #  @param aFilename The filename path (string).
@@ -101,7 +109,7 @@ def filterFile(aFilename):
     with open(args.termToHighlightFilePath, encoding=FILE_FORMAT) as aTermToHighlightRaw:
         for aOneLine in aTermToHighlightRaw:
             aTermToHighlight.append(aOneLine.strip())
-        aTermToHighlightAsRegexString='|'.join(aTermToHighlight)
+        aTermToHighlightAsRegexString=createRegexStr(aTermToHighlight)
 
     logger.info("aTermToHighlight: " + str(aTermToHighlight))
     aTermToHighlightAsRegex = re.compile(aTermToHighlightAsRegexString)
