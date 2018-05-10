@@ -9,6 +9,7 @@ This will remove email and phone number (very aggressive regex - lot of false po
 To run the script:
 ```
 python.exe .\main.py -h
+python.exe .\main.py --filelist .\inputFile.csv --filter
 ```
 
 # highlighter.py
