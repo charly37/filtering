@@ -16,7 +16,7 @@ class MyTest(unittest.TestCase):
 
     def test_createRegexStr(self):
         aFakeListWordMatch=["aaa","bbb","ccc"]
-        self.assertEqual(createRegexStr(aFakeListWordMatch), r"\baaa\b|\bbbb\b|\bccc\b")
+        self.assertEqual(createRegexStr(aFakeListWordMatch), r"\b(?i)aaa\b|\b(?i)bbb\b|\b(?i)ccc\b")
 
     def test_highlight_1(self):
         aFakePost1={"post_uuid":"1","content":"abc"}
@@ -57,12 +57,30 @@ class MyTest(unittest.TestCase):
         aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
         self.assertEqual(highlight(aFakePost, aFakePatternRegex), [])
 
-    def test_highlight_7(self):
+    def test_highlight_ducpliate_tag(self):
         #To avoid depulicate tag if a word is find several times
         aFakePost1={"post_uuid":"1","content":"test aaa test aaa test2 aaa test3"}
         aFakePattern=["aaa","bbb"]
         aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
         self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa"])
+
+    def test_highlight_case_insensitive(self):
+        aFakePost1={"post_uuid":"1","content":"test AAA test"}
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
+        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["AAA"])
+
+    def test_highlight_case_insensitive2(self):
+        aFakePost1={"post_uuid":"1","content":"test AAA test BBB test"}
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
+        self.assertCountEqual(highlight(aFakePost1, aFakePatternRegex), ["AAA","BBB"])
+
+    def test_highlight_case_insensitive3(self):
+        aFakePost1={"post_uuid":"1","content":"test Aaa test BBB test"}
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
+        self.assertCountEqual(highlight(aFakePost1, aFakePatternRegex), ["Aaa","BBB"])
 
 FILE_FORMAT="utf-8-sig"
 #wafaa use utf-8 and jenny utf-8-sig
@@ -116,7 +134,7 @@ def highlight(aPost, iTermToHighlightRegex):
     return aTags
 
 def createRegexStr(aListWords):
-    aListWordsUpdated = [r"\b" + aOneOriginalWord + r"\b" for aOneOriginalWord in aListWords]
+    aListWordsUpdated = [r"\b(?i)" + aOneOriginalWord + r"\b" for aOneOriginalWord in aListWords]
     aTermToHighlightAsRegexString='|'.join(aListWordsUpdated )
     return aTermToHighlightAsRegexString
 
