@@ -33,9 +33,10 @@ class MyTest(unittest.TestCase):
     def test_highlight_3(self):
         #To ensure that if several tag match we detect them all and not only the first one
         aFakePost1={"post_uuid":"1","content":"test aaa test bbb test"}
-        aFakePattern=["aaa","bbb"]
+        aFakePattern=["bbb","aaa"]
         aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa","bbb"])
+        #https://stackoverflow.com/questions/12813633/how-to-assert-two-list-contain-the-same-elements-in-python/35095881#35095881
+        self.assertCountEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa","bbb"])
 
     def test_highlight_4(self):
         aFakePost={"post_uuid":"1","content":"test aaa test tesbbbt test"}
@@ -55,6 +56,13 @@ class MyTest(unittest.TestCase):
         aFakePattern=["aaa","bbb","ccc ddd"]
         aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
         self.assertEqual(highlight(aFakePost, aFakePatternRegex), [])
+
+    def test_highlight_7(self):
+        #To avoid depulicate tag if a word is find several times
+        aFakePost1={"post_uuid":"1","content":"test aaa test aaa test2 aaa test3"}
+        aFakePattern=["aaa","bbb"]
+        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
+        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa"])
 
 FILE_FORMAT="utf-8-sig"
 #wafaa use utf-8 and jenny utf-8-sig
@@ -104,7 +112,7 @@ def highlight(aPost, iTermToHighlightRegex):
     aHighlightMatch=iTermToHighlightRegex.findall(aPost["content"])
     if(aHighlightMatch):
         logger.info("This post ID " + str(aPost) +  " was highlighted with : " + str(aHighlightMatch))
-        aTags = aHighlightMatch
+        aTags = list(set(aHighlightMatch))
     return aTags
 
 def createRegexStr(aListWords):
