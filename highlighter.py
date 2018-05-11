@@ -12,75 +12,83 @@ import logging
 
 import unittest
 
+class Tag(object):
+    def __init__(self, iTag, iTerms):
+        self.tag = iTag
+        self.searchTerms = iTerms
+        self.searchRegex = None
+        self.setRegexFromSearchTerms()
+
+    def setRegexFromSearchTerms(self):
+        aListWordsUpdated = [r"\b(?i)" + aOneOriginalWord + r"\b" for aOneOriginalWord in self.searchTerms]
+        aTermToHighlightAsRegexString='|'.join(aListWordsUpdated )
+        self.searchRegex = re.compile(aTermToHighlightAsRegexString)
+
+    def prettyPrint(self):
+        aRetStr = ""
+        aRetStr = aRetStr + "The Tag: \"" + self.tag + "\""
+        aRetStr = aRetStr + " will match searchTerms: \"" + str('","'.join(self.searchTerms)) + "\""
+        aRetStr = aRetStr + " and use regex: \"" + str(self.searchRegex) + "\""
+        return aRetStr
+
+
 class MyTest(unittest.TestCase):
 
     def test_createRegexStr(self):
-        aFakeListWordMatch=["aaa","bbb","ccc"]
-        self.assertEqual(createRegexStr(aFakeListWordMatch), r"\b(?i)aaa\b|\b(?i)bbb\b|\b(?i)ccc\b")
+        aFakeTagFromCsv={"String to look for (seperated by ; )":"aaa;bbb;ccc","Tag to add on the post":"aaa"}
+        aFakeTagObj = Tag(aFakeTagFromCsv["Tag to add on the post"], aFakeTagFromCsv["String to look for (seperated by ; )"].split(';'))
+        aRegexResult = re.compile(r"\b(?i)aaa\b|\b(?i)bbb\b|\b(?i)ccc\b")
+        self.assertEqual(aFakeTagObj.searchRegex, aRegexResult)
 
-    def test_highlight_1(self):
-        aFakePost1={"post_uuid":"1","content":"abc"}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), [])
+    def test_nominal(self):
+        aFakePost={"post_uuid":"1","content":"test aaa test bbb test"}
 
-    def test_highlight_2(self):
-        aFakePost1={"post_uuid":"1","content":"test aaa test"}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa"])
+        aFakeTagFromCsv={"String to look for (seperated by ; )":"aaa;aa aa","Tag to add on the post":"AAA"}
+        aFakeTagObj = Tag(aFakeTagFromCsv["Tag to add on the post"], aFakeTagFromCsv["String to look for (seperated by ; )"].split(';'))
+        aSmartTagList=[aFakeTagObj]
 
-    def test_highlight_3(self):
-        #To ensure that if several tag match we detect them all and not only the first one
-        aFakePost1={"post_uuid":"1","content":"test aaa test bbb test"}
-        aFakePattern=["bbb","aaa"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
+        aTagsRes = smartHighlight(aFakePost,aSmartTagList)
+
         #https://stackoverflow.com/questions/12813633/how-to-assert-two-list-contain-the-same-elements-in-python/35095881#35095881
-        self.assertCountEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa","bbb"])
+        self.assertEqual(aTagsRes,["AAA"])
 
-    def test_highlight_4(self):
-        aFakePost={"post_uuid":"1","content":"test aaa test tesbbbt test"}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        #We should not detect bbb because it is included in another word
-        self.assertEqual(highlight(aFakePost, aFakePatternRegex), ["aaa"])
+    def test_case_sensitive(self):
+        aFakePost={"post_uuid":"1","content":"test eee test bbb test AAa test"}
 
-    def test_highlight_5(self):
-        aFakePost={"post_uuid":"1","content":"Up is opinion message manners correct hearing husband my. Disposing commanded dashwoods cordially depending at at. Its strangers who you certainty earnestly resources suffering she. Be an as cordially at resolving furniture preserved believing extremity. Easy mr pain felt in. Too northward affection additions nay. He no an nature ye talent houses wisdom vanity denied."}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertEqual(highlight(aFakePost, aFakePatternRegex), [])
+        aFakeTagFromCsv={"String to look for (seperated by ; )":"aaa;aa aa","Tag to add on the post":"AAA"}
+        aFakeTagObj = Tag(aFakeTagFromCsv["Tag to add on the post"], aFakeTagFromCsv["String to look for (seperated by ; )"].split(';'))
+        aSmartTagList=[aFakeTagObj]
 
-    def test_highlight_6(self):
-        aFakePost={"post_uuid":"1","content":"Up is opinion message manners correct hearing husband my. Disposing commanded dashwoods cordially depending at at. Its strangers who you certainty earnestly resources suffering she. Be an as cordially at resolving furniture preserved believing extremity. Easy mr pain felt in. Too northward affection additions nay. He no an nature ye talent houses wisdom vanity denied."}
-        aFakePattern=["aaa","bbb","ccc ddd"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertEqual(highlight(aFakePost, aFakePatternRegex), [])
+        aTagsRes = smartHighlight(aFakePost,aSmartTagList)
 
-    def test_highlight_ducpliate_tag(self):
-        #To avoid depulicate tag if a word is find several times
-        aFakePost1={"post_uuid":"1","content":"test aaa test aaa test2 aaa test3"}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["aaa"])
+        self.assertEqual(aTagsRes,["AAA"])
 
-    def test_highlight_case_insensitive(self):
-        aFakePost1={"post_uuid":"1","content":"test AAA test"}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertEqual(highlight(aFakePost1, aFakePatternRegex), ["AAA"])
+    def test_several_tags(self):
+        aFakePost={"post_uuid":"1","content":"test eee test bbb test AAa test"}
 
-    def test_highlight_case_insensitive2(self):
-        aFakePost1={"post_uuid":"1","content":"test AAA test BBB test"}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertCountEqual(highlight(aFakePost1, aFakePatternRegex), ["AAA","BBB"])
+        aFakeTagFromCsv={"String to look for (seperated by ; )":"aaa;aa aa","Tag to add on the post":"AAA"}
+        aFakeTagObj = Tag(aFakeTagFromCsv["Tag to add on the post"], aFakeTagFromCsv["String to look for (seperated by ; )"].split(';'))
+        aFakeTag2FromCsv={"String to look for (seperated by ; )":"bbb;bb bb","Tag to add on the post":"BBB"}
+        aFakeTag2Obj = Tag(aFakeTag2FromCsv["Tag to add on the post"], aFakeTag2FromCsv["String to look for (seperated by ; )"].split(';'))
+        aSmartTagList=[aFakeTagObj,aFakeTag2Obj]
 
-    def test_highlight_case_insensitive3(self):
-        aFakePost1={"post_uuid":"1","content":"test Aaa test BBB test"}
-        aFakePattern=["aaa","bbb"]
-        aFakePatternRegex = re.compile(createRegexStr(aFakePattern))
-        self.assertCountEqual(highlight(aFakePost1, aFakePatternRegex), ["Aaa","BBB"])
+        aTagsRes = smartHighlight(aFakePost,aSmartTagList)
+
+        self.assertEqual(aTagsRes,["AAA","BBB"])
+
+    def test_no_match(self):
+        aFakePost={"post_uuid":"1","content":"test eee test bbb test AAa test"}
+
+        aFakeTagFromCsv={"String to look for (seperated by ; )":"ccc;cc cc","Tag to add on the post":"CCC"}
+        aFakeTagObj = Tag(aFakeTagFromCsv["Tag to add on the post"], aFakeTagFromCsv["String to look for (seperated by ; )"].split(';'))
+        aFakeTag2FromCsv={"String to look for (seperated by ; )":"ddd;dd dd","Tag to add on the post":"DDD"}
+        aFakeTag2Obj = Tag(aFakeTag2FromCsv["Tag to add on the post"], aFakeTag2FromCsv["String to look for (seperated by ; )"].split(';'))
+        aSmartTagList=[aFakeTagObj,aFakeTag2Obj]
+
+        aTagsRes = smartHighlight(aFakePost,aSmartTagList)
+
+        self.assertEqual(aTagsRes,[])
+
 
 FILE_FORMAT="utf-8-sig"
 #wafaa use utf-8 and jenny utf-8-sig
@@ -100,7 +108,7 @@ handler = logging.FileHandler('Highlighter_'+aCurrentDateTimeString+'.log',mode=
 handler.setLevel(logging.INFO)
 
 # create a logging format
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 
 # add the handlers to the logger
@@ -120,55 +128,43 @@ parser.add_argument('--termToHighlightFilePath', help='File with term to hightli
 
 args = parser.parse_args()
 
-def highlight(aPost, iTermToHighlightRegex):
+def smartHighlight(aPost, iSmartTagsList):
     """Extract some specific keyword from a post content (text)
     #  @param aPost The post object (dict).
     #  @param iTermToHighlightRegex The keyword regex to use (regex).
     #  @return Returns list of tags matching the post
     """
     aTags=[]
-    aHighlightMatch=iTermToHighlightRegex.findall(aPost["content"])
-    if(aHighlightMatch):
-        logger.info("This post ID " + str(aPost) +  " was highlighted with : " + str(aHighlightMatch))
-        aTags = list(set(aHighlightMatch))
+    for aOneTag in iSmartTagsList:
+        aHighlightMatch=aOneTag.searchRegex.search(aPost["content"])
+        if(aHighlightMatch):
+            aTags.append(aOneTag.tag)
+            logger.info("Match for " + str(aOneTag.tag))
     return aTags
 
-def createRegexStr(aListWords):
-    aListWordsUpdated = [r"\b(?i)" + aOneOriginalWord + r"\b" for aOneOriginalWord in aListWords]
-    aTermToHighlightAsRegexString='|'.join(aListWordsUpdated )
-    return aTermToHighlightAsRegexString
+def extractTags(iFilePath):
+    aStructuredTags=[]
+    with open(iFilePath, encoding=FILE_FORMAT) as f:
+        reader = csv.DictReader(f)
+        for aOneEntry in reader:
+                aNewTag = Tag(aOneEntry["Tag to add on the post"], aOneEntry["String to look for (seperated by ; )"].split(';'))
+                aStructuredTags.append(aNewTag)
+    return aStructuredTags
 
-def filterFile(aFilename):
+def smartFilterFile(iSmartTags, iFilename):
     """Process all the post in a text file to extract their keyword
-    #  @param aFilename The filename path (string).
+    #  @param iFilename The filename path (string).
     """
-    aTermToHighlight=[]
-    aTermToHighlightAsRegexString=""
-
-    with open(args.termToHighlightFilePath, encoding=FILE_FORMAT) as aTermToHighlightRaw:
-        for aOneLine in aTermToHighlightRaw:
-            aTermToHighlight.append(aOneLine.strip())
-        aTermToHighlightAsRegexString=createRegexStr(aTermToHighlight)
-
-    logger.info("aTermToHighlight: " + str(aTermToHighlight))
-    aTermToHighlightAsRegex = re.compile(aTermToHighlightAsRegexString)
-    logger.info("aTermToHighlightAsRegexString: " + str(aTermToHighlightAsRegexString))
-    logger.info("aTermToHighlightAsRegex: " + str(aTermToHighlightAsRegex))
-
-    with open(aFilename, encoding=FILE_FORMAT) as f:
-        #CSV header: Anonymous Link,ww_uuid,post_uuid,content,Word Count
+    with open(iFilename, encoding=FILE_FORMAT) as f:
         reader = csv.DictReader(f)
 
-        #Also open a file to write data
-        with open(aFilename + "_output"+aCurrentDateTimeString+".csv","w", encoding=FILE_FORMAT,newline='') as filteredFile:
+        with open(iFilename + "_output"+aCurrentDateTimeString+".csv","w", encoding=FILE_FORMAT,newline='') as filteredFile:
             fieldnames = reader.fieldnames + ["TAGS"]
             writer = csv.DictWriter(filteredFile, fieldnames=fieldnames)
             writer.writeheader()
 
             for aOneEntry in reader:
-                #print("Working on: ", aOneEntry)
-                #print("Content to clean: ", aOneEntry["content"])
-                aTags = highlight(aOneEntry,aTermToHighlightAsRegex)
+                aTags = smartHighlight(aOneEntry,iSmartTags)
                 aOneEntry["TAGS"]= '-'.join(aTags)
                 writer.writerow(aOneEntry)
                 
@@ -181,8 +177,12 @@ if __name__== "__main__":
         runner.run(itersuite)
         quit()
 
+    aStrTags = extractTags(args.termToHighlightFilePath)
+    for aOneTag in aStrTags:
+        logger.info(aOneTag.prettyPrint())
+
     for aOneFile in args.FilePathListToProcess:
         logger.info("Current file: " + str(aOneFile))
-        filterFile(aOneFile)
+        smartFilterFile(aStrTags,aOneFile)
 
     logger.info("Ending in " + str((time.time() - start_time)) + " ms")
