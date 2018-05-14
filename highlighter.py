@@ -34,7 +34,7 @@ class Tag(object):
 
 class MyTest(unittest.TestCase):
 
-    def test_createRegexStr(self):
+    def test_createRegex(self):
         aFakeTagFromCsv={"String to look for (seperated by ; )":"aaa;bbb;ccc","Tag to add on the post":"aaa"}
         aFakeTagObj = Tag(aFakeTagFromCsv["Tag to add on the post"], aFakeTagFromCsv["String to look for (seperated by ; )"].split(';'))
         aRegexResult = re.compile(r"\b(?i)aaa\b|\b(?i)bbb\b|\b(?i)ccc\b")
@@ -91,6 +91,7 @@ class MyTest(unittest.TestCase):
 
 
 FILE_FORMAT="utf-8-sig"
+FILE_FORMAT="ISO-8859-1"
 #wafaa use utf-8 and jenny utf-8-sig
 
 #https://stackoverflow.com/questions/1557571/how-do-i-get-time-of-a-python-programs-execution
@@ -139,7 +140,7 @@ def smartHighlight(aPost, iSmartTagsList):
         aHighlightMatch=aOneTag.searchRegex.search(aPost["content"])
         if(aHighlightMatch):
             aTags.append(aOneTag.tag)
-            logger.info("Match for " + str(aOneTag.tag))
+            #logger.info("Match for " + str(aOneTag.tag))
     return aTags
 
 def extractTags(iFilePath):
@@ -155,6 +156,7 @@ def smartFilterFile(iSmartTags, iFilename):
     """Process all the post in a text file to extract their keyword
     #  @param iFilename The filename path (string).
     """
+    aIndexForThisFile=0
     with open(iFilename, encoding=FILE_FORMAT) as f:
         reader = csv.DictReader(f)
 
@@ -167,6 +169,8 @@ def smartFilterFile(iSmartTags, iFilename):
                 aTags = smartHighlight(aOneEntry,iSmartTags)
                 aOneEntry["TAGS"]= '-'.join(aTags)
                 writer.writerow(aOneEntry)
+                aIndexForThisFile=aIndexForThisFile+1
+                logger.info("aIndexForThisFile " + str(aIndexForThisFile))
                 
 
 if __name__== "__main__":
@@ -176,6 +180,8 @@ if __name__== "__main__":
         itersuite = unittest.TestLoader().loadTestsFromTestCase(MyTest)
         runner.run(itersuite)
         quit()
+
+    aIndex=0
 
     aStrTags = extractTags(args.termToHighlightFilePath)
     for aOneTag in aStrTags:
